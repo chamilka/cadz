@@ -1,0 +1,86 @@
+	<?php 
+		$path="img/advertisements/temp/".rand(100000,99999)."/";
+		if(mkdir($path))
+			echo "created";
+		
+	?>
+	<head>
+		<title>Test Jquery textbox loader</title>
+		<script src="http://localhost/ceyAdz/js/jquery-1.8.3.min.js"></script>
+		<script src="http://localhost/ceyAdz/js/jquery.autosize-min.js"></script>
+		
+	</head>
+	<body>
+		
+		<div id='TextBoxesGroup'>
+			<div id="TextBoxDiv1">
+				<label>Textbox #1 : </label>
+				<!--<input type='textbox' id='textbox1' />-->
+				<textarea id='autosize' rows="1" cols="30" style="resize:vertical">With CSS transition.</textarea>
+				<input type='button' value='+' id='addButton'>
+				<label for="name1">First name</label><input type="text" name="name1" id="name1" />
+			</div>
+		</div>
+
+		<input type='button' value='Add Button' id='addButton'>
+		<input type='button' value='Remove Button' id='removeButton'>
+		<input type='button' value='Get TextBox Value' id='getButtonValue'>
+		
+		<script>
+			$(document).ready(function () {
+			 	/*var counter = 2;
+				$("#addButton").click(function () {
+			            if (counter > 10) {
+			                alert("Only 10 textboxes allowed");
+			                return false;
+			            }
+			            $('<div/>',{'id':'TextBoxDiv' + counter}).html(
+			              $('<label/>').html( 'Textbox #' + counter + ' : ' )
+			            )
+			            .append( $('<input type="text">').attr({'id':'textbox' + counter,'name':'textbox' + counter}) )
+			            .appendTo( '#TextBoxesGroup' )       
+			            counter++;
+			    });
+
+		        $("#removeButton").click(function () {
+		            if (counter == 1) {
+		                alert("No more textbox to remove");
+		                return false;
+		            }
+		            counter--;
+		            $("#TextBoxDiv" + counter).remove();
+		        });
+
+		        $("#getButtonValue").click(function () {
+		         var msg = '';
+		            for (i = 1; i < counter; i++) {
+		                msg += "\n Textbox #" + i + " : " + $('#textbox' + i).val();
+		            }
+		            alert(msg);
+		        });*/
+
+		        $(function(){
+					$('#autosize').autosize();
+				});
+
+				$('#getButtonValue').click(function(){
+					//$('label[for="name1"]').append('<input type="text" name="txt1" value="Hello" />');
+					$('<textarea>')
+						.attr('id','text1')
+						.appendTo('#TextBoxesGroup');
+				});
+
+				$('#name1').bind('keypress', function(e) {
+					if(e.keyCode==13){
+					// Enter pressed... do anything here...
+					alert('enter');
+					}
+				});
+
+
+
+
+			});
+		</script>			
+	</body>
+</html>

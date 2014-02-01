@@ -1,0 +1,35 @@
+mysql> create table district (dist_id int auto_increment primary key,dist_name varchar(255));
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> create table area (area_id int auto_increment primary key,area_name varchar(255), dist_id int);
+Query OK, 0 rows affected (0.10 sec)
+
+mysql> create table temp1 (dist_name varchar(255),area_name varchar(255));
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> alter table district change dist_name dist_name varchar(255) unique;
+
+mysql> load data local infile 'C:/wamp/www/CeyAdz/Arealist/locationsnaviandfootericons/locations2.csv' into table district fields terminated by ',' op
+tionally enclosed by '"' lines terminated by '\r\n' (dist_name);
+Query OK, 25 rows affected, 331 warnings (0.09 sec)
+Records: 331  Deleted: 0  Skipped: 306  Warnings: 331
+
+mysql> load data local infile 'C:/wamp/www/CeyAdz/Arealist/locationsnaviandfootericons/locations2.csv' into table temp1 fields terminated by ',' optio
+nally enclosed by '"' lines terminated by '\r\n';
+Query OK, 331 rows affected (0.08 sec)
+Records: 331  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql> alter table temp1 add column dist_id int;
+Query OK, 331 rows affected (0.15 sec)
+Records: 331  Duplicates: 0  Warnings: 0
+
+mysql> update temp1 t, district d set t.dist_id=d.dist_id where t.dist_name=d.dist_name;
+Query OK, 331 rows affected (0.17 sec)
+Rows matched: 331  Changed: 331  Warnings: 0
+
+mysql> insert into area (select null,area_name,dist_id from temp1);
+Query OK, 331 rows affected (0.32 sec)
+Records: 331  Duplicates: 0  Warnings: 0
+
+
+

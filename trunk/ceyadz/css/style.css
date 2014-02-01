@@ -1,0 +1,14 @@
+label{display:block}
+input{padding:3px 5px; width:250px; margin:0 0 10px;}
+input[type="file"]{padding-left:0;}
+input[type="submit"]{width:auto;}
+#file a{float:right;margin:0 0 5px 10px;}
+#file ul{list-style:none; padding-left: 0;}
+#file li{width:280px; font-size:12px; padding:5px 0; border-bottom:1px;}
+
+.thumb_panel {margin-left: 0px;}
+.content_panel {margin-left: 0px;}
+.adv-rows {
+	/*margin-bottom:10px;*/
+	border-bottom:1px solid black;
+}
