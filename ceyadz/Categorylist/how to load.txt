@@ -1,0 +1,22 @@
+mysql> load data local infile 'C:/wamp/www/CeyAdz/Categorylist/catnew.csv' into table category fields terminated by ',' optionally enclosed by '"' lin
+es terminated by'\r\n' (cat_name);
+
+Query OK, 20 rows affected, 279 warnings (0.07 sec)
+Records: 278  Deleted: 0  Skipped: 258  Warnings: 279
+
+
+mysql> load data local infile 'C:/wamp/www/CeyAdz/Categorylist/catnew.csv' into table temp fields terminated by ',' optionally enclosed by '"' lines t
+erminated by'\r\n' (cat_name,sub_cat_name);
+
+Query OK, 278 rows affected (0.07 sec)
+Records: 278  Deleted: 0  Skipped: 0  Warnings: 0
+
+
+mysql> update temp t,category c set t.cat_id=c.cat_id where t.cat_name=c.cat_name;
+Query OK, 278 rows affected (0.14 sec)
+Rows matched: 278  Changed: 278  Warnings: 0
+
+
+mysql> insert into sub_category (select null,sub_cat_name,cat_id from temp);
+Query OK, 278 rows affected (0.06 sec)
+Records: 278  Duplicates: 0  Warnings: 0

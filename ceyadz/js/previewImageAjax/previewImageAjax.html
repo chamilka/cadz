@@ -1,0 +1,233 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+Author: Alberto Moyano Sánchez
+Date: 2009-05-24
+
+Description:
+- This is a script to upload a form dynamically with Ajax, which contains an
+  image and more data. The image is displayed in preview when it is selected.
+- It consists of one html page and two php scripts. I wanted to do the
+  funtionality of the first php script, which resizes the selected image,
+  with Ajax instead of php. But it is not possible due to the limited action
+  of JavaScript over the file field and the filesystem, because of security
+  reasons. 
+- There are actually two forms, one for the image and another for the rest
+  of the data. (The reason is that JavaScript cannot take the selected file
+  of the file field. It is explained some points below.) There is also an
+  iframe which displays the image.
+- The image form is automatically submited when a new file is selected. It is
+  sent to a php script which resizes the image, stores it in a temporary 
+  directory and displays it. The target of the image form is the iframe, so
+  the image is displayed in it without need of reloading the whole page.
+- The php script also writes in the iframe a control variable containing the
+  temporary path of the uploaded image. This variable is key to dynamically
+  upload the data form with Ajax.
+- I wanted to do the resizing and previewing of the image with JavaScript,
+  saving the submitting of the image form and the processing of the image
+  at the server side. However it is not possible, because JavaScript cannot
+  interact with the filesystem due to security reasons.
+- Another handicap is that JavaScript can barely manage the file field, due
+  to security reasons too. JavaScript can only read the name of the selected
+  file but not the whole path. JavaScript can neither take the selected file
+  to send it via Ajax. Thus, the file field cannot be sent via Ajax. The only
+  way it can be sent is submitting the whole form. Therefore must be a
+  separate form only for the file field, in order be able to submit only this 
+  field and not the rest of the fields.
+- The image form has another hidden field (for testing purpose it is visible)
+  to store the name of the previous selected file, so it can be removed by
+  the php script.
+- The button to submit the data form takes the data fields and the control
+  variable of the iframe, which says if there is an uploaded image and what
+  its temporary path in the server is. A second php script is called, which
+  moves the uploaded image from the temporary directory to the final one,
+  and process the rest of the data.
+  
+Notes and improvements:
+- This script has been tested with Firefox 3.0.10, Opera 9.64, Safari 4
+  and Internet Explorer 6.0. Everything works fine (with the exception of
+  the next point).
+- The event "onchange" of the file field is well performed by all browsers
+  when selecting a file with the button "browse". Firefox and Safari don't
+  allow to write in the field, only to use the button to select a file.
+  Explorer and Opera allow to write in the text box of the field. Explorer
+  works fine and trhows the event "onchange" when the field loses the focus.
+  Opera throws the event "onchange" everytime a key is pressed when typing
+  in the field, what is not the desired behaviour.
+- The file to upload must be validated with JavaScript previously to send
+  it in the function uploadImage().
+- If a file is sent, which is larger than the maximum size especified with
+  the hidden field MAX_FILE_SIZE, PHP will throw an error, with error code
+  2. To avoid such message and a futile sending, the file must be previously
+  validated with JavaScript.
+- In order to test the posible delays with the uploads, adjust the sleep
+  statement in the function displayImage() in the file uploadImage.php.
+  Adjust also the parameters in the JavaScript function submitForm().
+- When an image is uploaded to the temporary directory to preview it, it is
+  checked if there was a previously previewed image, to remove it from the
+  temporary directory. However, the temporary directory must be emptied
+  from time to time, because there will be files from the previewed images
+  of forms that were finally not submited.
+-->
+<html>
+  <head>
+    <title>
+      Upload and preview an image with Ajax
+    </title>    
+    <script language="JavaScript" type="text/javascript">
+      
+      var loadingHtml = "Loading..."; // this could be an animated image
+      var imageLoadingHtml = "Image loading...";
+    	var http = getXMLHTTPRequest();
+      //----------------------------------------------------------------
+    	function uploadImage() {
+        var uploadedImageFrame = window.uploadedImage;
+    	  uploadedImageFrame.document.body.innerHTML = loadingHtml;
+    	  // VALIDATE FILE
+        var imagePath = uploadedImageFrame.imagePath;
+        if(imagePath == null){
+          imageForm.oldImageToDelete.value = "";
+        }
+        else {
+          imageForm.oldImageToDelete.value = imagePath;
+        }
+        imageForm.submit();
+      }
+      //----------------------------------------------------------------
+      function showImageUploadStatus() {
+        var uploadedImageFrame = window.uploadedImage;
+        if(uploadedImageFrame.document.body.innerHTML == loadingHtml){
+          divResult.innerHTML = imageLoadingHtml;
+        }
+        else {
+          var imagePath = uploadedImageFrame.imagePath;
+          if(imagePath == null){
+            divResult.innerHTML = "No uploaded image in this form.";
+          }
+          else {
+            divResult.innerHTML = "Loaded image: " + imagePath;
+          }
+        }
+      }
+      //----------------------------------------------------------------
+      function getXMLHTTPRequest() {
+      	try {
+        	xmlHttpRequest = new XMLHttpRequest();
+      	}
+      	catch(error1) {
+        	try {
+          	xmlHttpRequest = new ActiveXObject("Msxml2.XMLHTTP");
+          }
+          catch(error2) {
+      	    try {
+      		    xmlHttpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+      	    }
+      	    catch(error3) {
+      		    xmlHttpRequest = false;
+      	    }
+          }
+        }
+        return xmlHttpRequest;
+      }
+      //----------------------------------------------------------------
+      function sendData() {
+      	var url = "submitForm.php";
+        var parameters = "imageDescription=" + dataForm.imageDescription.value;
+        var imagePath = window.uploadedImage.imagePath;
+        if(imagePath != null){
+          parameters += "&uploadedImagePath=" + imagePath;
+        }
+        
+      	http.open("POST", url, true);
+    
+        http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        http.setRequestHeader("Content-length", parameters.length);
+        http.setRequestHeader("Connection", "close");
+    
+      	http.onreadystatechange = useHttpResponse;
+      	http.send(parameters);
+      }
+      //----------------------------------------------------------------
+      function submitFormIfNotImageLoading(maxLoadingTime, checkingIntervalTime) {
+        if(window.uploadedImage.document.body.innerHTML == loadingHtml) {
+          if(maxLoadingTime <= 0) {
+            divResult.innerHTML = "The image loading has timed up. "
+                                + "Please, try again when the image is loaded.";
+          }
+          else {
+            divResult.innerHTML = imageLoadingHtml;
+            maxLoadingTime = maxLoadingTime - checkingIntervalTime;
+            var recursiveCall = "submitFormIfNotImageLoading(" 
+                              + maxLoadingTime + ", " + checkingIntervalTime + ")";
+            setTimeout(recursiveCall, checkingIntervalTime);
+          }
+        }
+        else {
+          sendData();
+        }
+      }
+    	//----------------------------------------------------------------
+      function submitForm() {
+        var maxLoadingTime = 3000; // milliseconds
+        var checkingIntervalTime = 500; // milliseconds
+        submitFormIfNotImageLoading(maxLoadingTime, checkingIntervalTime);
+      }
+      //----------------------------------------------------------------
+      function useHttpResponse() {
+      	if (http.readyState == 4) {
+        	if (http.status == 200) {
+          	divResult.innerHTML = http.responseText;
+          	dataForm.reset();
+          	imageForm.reset();
+          	window.uploadedImage.document.body.innerHTML = "";
+          	window.uploadedImage.imagePath = null;
+        	}
+      	}
+      }
+
+    </script>
+  </head>
+  <body>
+    <h3>
+      Form with preview of resized image with Ajax
+    </h3>
+    <form id="dataForm" name="dataForm">
+      Image description: 
+      <input name="imageDescription" id="imageDescription" type="text" 
+            size="30"/>
+    </form>
+    
+    <form id="imageForm" name="imageForm" enctype="multipart/form-data"
+          action="uploadImage.php" method="POST" target="uploadedImage">
+      <!-- Next field limits the maximum size of the selected file to 2MB.
+           If exceded the size, an error will be sent with the file. -->
+      <input type="hidden" name="MAX_FILE_SIZE" value="2000000" />
+      Image: 
+      <input name="imageToUpload" id="imageToUpload" type="file"
+            onchange="uploadImage();" size="30"/>
+      <br />
+      Old uploaded image to delete (this field should be hidden):
+      <br />
+      <input name="oldImageToDelete" id="oldImageToDelete" type="text"
+            size="50" />
+    </form>
+    
+    <iframe id="uploadedImage" name="uploadedImage" src="" 
+          style="width:200px; height:200px;"
+          frameborder="0" marginheight="0" marginwidth="0"></iframe>
+    
+    <br /><br />
+    
+    <form>
+    <input type="button" onclick="submitForm();" value="Submit" />
+    </form>
+
+    <br />
+    
+    <form>
+    <input type="button" onclick="showImageUploadStatus();" value="Show image upload status" />
+    </form>
+    
+    <div id="divResult"></div>
+
+  </body>
+</html>
