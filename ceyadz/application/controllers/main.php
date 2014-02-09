@@ -105,4 +105,6 @@ class Main extends CI_Controller
 		$disp.="</table>";
 		return $disp;
 	}*/
+	
+	
 }
